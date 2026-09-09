@@ -3,6 +3,11 @@
 # dependencies
 node_modules/
 
+# yarn (node-modules linker – only keep config + lockfile)
+.yarn/*
+!.yarn/patches
+.pnp.*
+
 # Expo
 .expo/
 dist/
