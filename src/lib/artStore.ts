@@ -34,6 +34,21 @@ export function clearArt(key: string): void {
   AsyncStorage.removeItem(storageKey(key)).catch(() => {});
 }
 
+const LAST_PAGE_KEY = storageKey('coloring-last-page');
+
+/** The colouring page the child was last on (persists across app restarts). */
+export async function loadLastColoringPage(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(LAST_PAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastColoringPage(pageId: string): void {
+  AsyncStorage.setItem(LAST_PAGE_KEY, pageId).catch(() => {});
+}
+
 /**
  * Coalesces rapid changes into a single write. `flush()` writes any pending
  * change immediately (call it on unmount / before navigating away).

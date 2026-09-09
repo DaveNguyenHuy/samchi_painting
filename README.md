@@ -8,13 +8,11 @@ Icon app = ảnh hai bé (`assets/logo.png`).
 - **Vẽ tự do** – bút chì / cọ / tẩy, thanh trượt 10 mức cỡ nét, bảng 12 màu, undo/redo, xoá hết, lưu.
   Độ dày nét cố định theo mức đã chọn (dùng lực nhấn nếu bút có báo `stylusData.pressure`).
   Tự lưu bản vẽ, mở lại là còn.
-- **Tô màu tranh** – 30 bức tranh nét vẽ sẵn (công chúa, lâu đài, mèo, chó, thỏ, gấu,
-  cá, cá voi, rùa, vịt, cú, ong, bọ rùa, ốc sên, ô tô, thuyền, tên lửa, bóng bay,
-  kem, cupcake, mặt trời, hoa, cầu vồng, sao, tim, cây, nấm, nhà, vương miện, bươm bướm).
+- **Tô màu tranh** – 60 bức tranh nét vẽ sẵn (thú, xe, đồ ăn, thiên nhiên, cổ tích…).
   **Tô màu tự do bằng cọ** đè lên hình nét (nét đen luôn hiện ở trên, tô trong khung hình).
-  Cọ / tẩy / thanh trượt 10 mức cỡ nét / bảng màu. Nút 🎲 bốc tranh ngẫu nhiên, ▦ mở lưới chọn tranh;
-  vào màn là bốc ngẫu nhiên một bức. Undo/redo, "Tô lại" xoá hết.
-  **Tô dở tự lưu** (nét cọ theo từng bức) – quay lại tô tiếp.
+  Cọ / tẩy / thanh trượt 10 mức cỡ nét / bảng màu. Nút ▦ mở lưới thumbnail chọn tranh, 🎲 bốc ngẫu nhiên.
+  Undo/redo, "Tô lại" xoá hết.
+  **Tự lưu**: nét cọ theo từng bức + nhớ bức đang tô dở → mở lại là tô tiếp đúng chỗ.
 - **Thư viện** – xem lại tranh đã lưu, lưu tiếp vào ứng dụng Ảnh, hoặc bỏ đi.
 - Hiệu ứng âm thanh bật/tắt bằng nút loa. Khoá ngang màn hình.
 - Splash screen = ảnh hai bé (`assets/logo.png`) trên nền kem, hiện ~1s rồi mờ dần.
@@ -81,7 +79,7 @@ app/                 expo-router (index, draw, color, gallery, _layout)
 src/screens/         UI từng màn
 src/components/       DrawSurface, BrushSlider, VerticalPalette, PagePicker, Toast, ...
 src/hooks/           useDrawing.ts (state machine nét vẽ)
-src/coloring/         pages.ts (30 tranh, dựng lazy) + shapes.ts (helper hình)
+src/coloring/         pages.ts (60 tranh, dựng lazy) + shapes.ts (helper hình)
 src/lib/             stroke.ts, gallery.ts, artStore.ts (lưu nét), sfx.ts
 assets/sfx/          pop.wav, saved.wav
 scripts/build-ipa.sh build .ipa production
@@ -93,5 +91,7 @@ scripts/build-ipa.sh build .ipa production
 - `expo-doctor` còn báo trùng `react` – do `~/node_modules/react` (của `~/package.json`,
   không phải project này). `metro.config.js` đã neo resolution trong project nên không ảnh hưởng.
   Muốn hết cảnh báo thì dọn `~/node_modules` + `~/package.json`.
-- Bút Trung Quốc bên thứ 3 hầu như không gửi lực nhấn cho iOS → độ dày nét tính theo tốc độ di bút.
-  Nếu sau này dùng bút có `stylusData.pressure` thì code tự chuyển sang dùng lực nhấn.
+- Độ dày nét cố định theo mức trên thanh trượt (bút TQ bên thứ 3 hầu như không gửi
+  `stylusData.pressure`; nếu có thì code tự dùng lực nhấn thay cho mức cố định).
+- 30 hình tô màu mới (#31–60) dựng "mù" (không xem trực tiếp được) — mở lưới ▦ để soi,
+  bức nào xấu báo lại để chỉnh path trong `src/coloring/pages.ts`.

@@ -69,7 +69,13 @@ export function GalleryScreen({ onBack }: { onBack: () => void }) {
         />
       )}
 
-      <Modal visible={!!preview} transparent animationType="fade" onRequestClose={() => setPreview(null)}>
+      <Modal
+        visible={!!preview}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreview(null)}
+        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+      >
         <View style={styles.modalBg}>
           {preview && (
             <>

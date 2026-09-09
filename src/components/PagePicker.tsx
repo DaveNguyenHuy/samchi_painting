@@ -1,8 +1,39 @@
+import { useMemo } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Canvas, Group, Path } from '@shopify/react-native-skia';
 import { RailButton } from './RailButton';
 import { COLORS } from '../theme';
-import { PAGES } from '../coloring/pages';
+import { PAGES, regionsFor, type ColoringPage } from '../coloring/pages';
+import { PAGE_SIZE } from '../coloring/shapes';
+
+const THUMB = 128;
+
+function PageThumb({ page }: { page: ColoringPage }) {
+  const regions = useMemo(() => regionsFor(page), [page]);
+  const s = THUMB / PAGE_SIZE;
+  return (
+    <Canvas style={{ width: THUMB, height: THUMB }}>
+      <Group transform={[{ scale: s }]}>
+        {regions.map((r) =>
+          r.kind === 'ink' ? (
+            <Path key={r.id} path={r.path} color="#2B2B2B" />
+          ) : (
+            <Path
+              key={r.id}
+              path={r.path}
+              color="#2B2B2B"
+              style="stroke"
+              strokeWidth={r.kind === 'line' ? 13 : 11}
+              strokeJoin="round"
+              strokeCap="round"
+            />
+          ),
+        )}
+      </Group>
+    </Canvas>
+  );
+}
 
 type Props = {
   visible: boolean;
@@ -13,10 +44,16 @@ type Props = {
 
 export function PagePicker({ visible, currentIndex, onPick, onClose }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+      supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+    >
       <SafeAreaView style={styles.root} edges={['top', 'bottom', 'left', 'right']}>
         <View style={styles.header}>
-          <Text style={styles.title}>Chọn tranh để tô</Text>
+          <Text style={styles.title}>Chọn tranh để tô 🎨</Text>
           <RailButton icon="close" onPress={onClose} />
         </View>
         <FlatList
@@ -25,6 +62,8 @@ export function PagePicker({ visible, currentIndex, onPick, onClose }: Props) {
           numColumns={5}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.row}
+          initialNumToRender={15}
+          windowSize={7}
           renderItem={({ item, index }) => (
             <Pressable
               style={[styles.tile, index === currentIndex && styles.tileOn]}
@@ -33,9 +72,11 @@ export function PagePicker({ visible, currentIndex, onPick, onClose }: Props) {
                 onClose();
               }}
             >
-              <Text style={styles.emoji}>{item.emoji}</Text>
+              <View style={styles.thumbBox}>
+                <PageThumb page={item} />
+              </View>
               <Text style={styles.name} numberOfLines={1}>
-                {item.title}
+                {item.emoji} {item.title}
               </Text>
             </Pressable>
           )}
@@ -55,22 +96,25 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 26, fontWeight: '800', color: COLORS.ink },
   grid: { paddingBottom: 24 },
-  row: { gap: 14, marginBottom: 14 },
+  row: { gap: 12, marginBottom: 12 },
   tile: {
     flexBasis: 0,
     flexGrow: 1,
     maxWidth: '19%',
-    aspectRatio: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: COLORS.card,
     borderWidth: 3,
     borderColor: COLORS.border,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 6,
+    paddingVertical: 8,
+    gap: 4,
   },
   tileOn: { borderColor: COLORS.coloringInk, backgroundColor: '#F0EEFF' },
-  emoji: { fontSize: 44 },
-  name: { fontSize: 13, fontWeight: '700', color: COLORS.inkSoft },
+  thumbBox: {
+    width: THUMB,
+    height: THUMB,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  name: { fontSize: 12, fontWeight: '700', color: COLORS.inkSoft },
 });

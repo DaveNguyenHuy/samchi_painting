@@ -12,12 +12,21 @@ import { Toast } from '../components/Toast';
 import { BRUSH_SIZES, COLORS, DEFAULT_BRUSH_INDEX } from '../theme';
 import { PAGES, regionsFor } from '../coloring/pages';
 import { PAGE_SIZE } from '../coloring/shapes';
-import { clearArt, createDebouncedSaver, loadArt } from '../lib/artStore';
+import {
+  clearArt,
+  createDebouncedSaver,
+  loadArt,
+  loadLastColoringPage,
+  saveLastColoringPage,
+} from '../lib/artStore';
 import { exportToPhotos, saveArtwork } from '../lib/gallery';
 import { playPop, playSaved, sfxStore, useSfxEnabled } from '../lib/sfx';
 
 const DEFAULT_COLOR = '#E53935';
 const keyFor = (pageId: string) => `coloring:${pageId}`;
+
+/** The page open when the screen was last left – resumed within an app session. */
+let sessionPage: string | null = null;
 
 export function ColoringScreen({ onBack }: { onBack: () => void }) {
   const soundOn = useSfxEnabled();
@@ -30,7 +39,15 @@ export function ColoringScreen({ onBack }: { onBack: () => void }) {
   const savedRev = useRef(-1);
   const savingRef = useRef(false);
 
-  const [pageIndex, setPageIndex] = useState(() => Math.floor(Math.random() * PAGES.length));
+  const [pageIndex, setPageIndex] = useState(() => {
+    if (sessionPage) {
+      const i = PAGES.findIndex((p) => p.id === sessionPage);
+      if (i >= 0) return i;
+    }
+    return Math.floor(Math.random() * PAGES.length);
+  });
+  const pageIndexRef = useRef(pageIndex);
+  pageIndexRef.current = pageIndex;
   const [color, setColor] = useState(DEFAULT_COLOR);
   const [size, setSize] = useState<number>(BRUSH_SIZES[DEFAULT_BRUSH_INDEX]);
   const [erasing, setErasing] = useState(false);
@@ -64,6 +81,38 @@ export function ColoringScreen({ onBack }: { onBack: () => void }) {
     ),
     [regions, geom],
   );
+
+  // On the first colouring mount of the session, resume the page from the
+  // previous app run (falls back to the random page picked above).
+  useEffect(() => {
+    if (sessionPage) return;
+    let cancelled = false;
+    loadLastColoringPage().then((id) => {
+      if (cancelled || sessionPage) return;
+      const i = id ? PAGES.findIndex((p) => p.id === id) : -1;
+      if (i >= 0) {
+        setPageIndex(i); // the effect below persists it
+      } else {
+        // nothing saved yet – pin the current (random) page as the resume point
+        sessionPage = PAGES[pageIndexRef.current].id;
+        saveLastColoringPage(sessionPage);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Remember the current page (skip the transient initial mount value).
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
+    sessionPage = PAGES[pageIndex].id;
+    saveLastColoringPage(sessionPage);
+  }, [pageIndex]);
 
   // Load saved paint for the current page; block persistence until it's in.
   useEffect(() => {
