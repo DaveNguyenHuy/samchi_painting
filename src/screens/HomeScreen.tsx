@@ -1,8 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { COLORS } from '../theme';
 
-const KIDS = 'Linh Chi & Linh Sam';
+// Set per-family in app.config.ts (extra.welcome); this is the base-app default.
+const WELCOME =
+  (Constants.expoConfig?.extra?.welcome as string | undefined) ?? 'Chào Linh Chi & Linh Sam!';
 
 type Props = {
   onFreeDraw: () => void;
@@ -14,7 +17,7 @@ export function HomeScreen({ onFreeDraw, onColoring, onGallery }: Props) {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.hello}>Chào {KIDS}!</Text>
+        <Text style={styles.hello}>{WELCOME}</Text>
         <Pressable style={styles.galleryBtn} onPress={onGallery} hitSlop={12}>
           <Text style={styles.galleryIcon}>🖼️</Text>
         </Pressable>

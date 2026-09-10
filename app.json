@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sam&Chi Painting",
     "slug": "ipad_painting",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "landscape",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
@@ -17,8 +17,7 @@
       "infoPlist": {
         "UIBackgroundModes": [],
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "appleTeamId": "N8VELFT88F"
+      }
     },
     "android": {
       "package": "com.davenguyenhuy.vecungchisam",
