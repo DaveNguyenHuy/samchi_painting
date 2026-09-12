@@ -1,6 +1,6 @@
 {
   "name": "ipad_painting",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -28,7 +28,6 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
-  },
   "scripts": {
     "start": "expo start",
     "ios": "expo run ios",

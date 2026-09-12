@@ -46,6 +46,20 @@ export function deleteArtwork(name: string): void {
   if (file.exists) file.delete();
 }
 
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Format a saved artwork's timestamp for display.
+ * `'short'` → "10/09" (grid thumbnails), `'full'` → "10/09/2026 14:32" (preview).
+ */
+export function formatArtworkDate(ms: number, style: 'short' | 'full' = 'full'): string {
+  const d = new Date(ms);
+  const day = pad2(d.getDate());
+  const month = pad2(d.getMonth() + 1);
+  if (style === 'short') return `${day}/${month}`;
+  return `${day}/${month}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 /** Also copy a saved file into the iPad's Photos app. */
 export async function exportToPhotos(uri: string): Promise<boolean> {
   const perm = await MediaLibrary.requestPermissionsAsync();
