@@ -22,17 +22,23 @@ type Family = {
 
 // ── add a family here, then:  ./scripts/build-ipa.sh <key> ────────────────────
 const FAMILIES: Record<string, Family> = {
-  // chi: {
-  //   name: 'Bé Chi Tập Tô',
-  //   bundleId: 'com.davenguyenhuy.paint.chi',
-  //   welcome: 'Chào Chi và Sam!',
-  //   image: './families/chi.png',
-  // },
   mo: {
     name: "Bé Mỡ painting",
     bundleId: "com.davenguyenhuy.paint.mo",
     welcome: "Chào Mỡ!",
     image: "./families/mo.png",
+  },
+  dau: {
+    name: "Đậu&Voi painting",
+    bundleId: "com.davenguyenhuy.paint.dau",
+    welcome: "Chào Đậu và Voi!",
+    image: "./families/dau.png",
+  },
+  han: {
+    name: "Hân&Thiện painting",
+    bundleId: "com.davenguyenhuy.paint.han",
+    welcome: "Chào Hân và Thiện!",
+    image: "./families/han.png",
   },
 };
 

@@ -17,7 +17,8 @@
       "infoPlist": {
         "UIBackgroundModes": [],
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "N8VELFT88F"
     },
     "android": {
       "package": "com.davenguyenhuy.vecungchisam",

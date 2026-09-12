@@ -13,7 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { RoundButton } from '../components/RoundButton';
 import { COLORS } from '../theme';
-import { deleteArtwork, exportToPhotos, listArtwork, type Artwork } from '../lib/gallery';
+import {
+  deleteArtwork,
+  exportToPhotos,
+  formatArtworkDate,
+  listArtwork,
+  type Artwork,
+} from '../lib/gallery';
 
 export function GalleryScreen({ onBack }: { onBack: () => void }) {
   const [items, setItems] = useState<Artwork[]>(() => safeList());
@@ -64,6 +70,9 @@ export function GalleryScreen({ onBack }: { onBack: () => void }) {
           renderItem={({ item }) => (
             <Pressable style={styles.cell} onPress={() => setPreview(item)}>
               <Image source={{ uri: item.uri }} style={styles.thumb} resizeMode="cover" />
+              <View style={styles.dateBadge}>
+                <Text style={styles.dateBadgeText}>{formatArtworkDate(item.modified, 'short')}</Text>
+              </View>
             </Pressable>
           )}
         />
@@ -80,6 +89,7 @@ export function GalleryScreen({ onBack }: { onBack: () => void }) {
           {preview && (
             <>
               <Image source={{ uri: preview.uri }} style={styles.big} resizeMode="contain" />
+              <Text style={styles.modalDate}>{formatArtworkDate(preview.modified, 'full')}</Text>
               <View style={styles.modalBtns}>
                 <RoundButton label="Đóng" onPress={() => setPreview(null)} />
                 <RoundButton label="Lưu vào Ảnh" tone="primary" onPress={() => toPhotos(preview)} />
@@ -129,6 +139,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   thumb: { width: '100%', height: '100%' },
+  dateBadge: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingVertical: 3,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  dateBadgeText: { fontSize: 11, fontWeight: '700', color: '#FFF', textAlign: 'center' },
+  modalDate: { fontSize: 15, fontWeight: '700', color: '#FFF', opacity: 0.85 },
   modalBg: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
