@@ -37,7 +37,7 @@ export function saveArtwork(image: SkImage): string {
   const bytes = image.encodeToBytes(); // PNG
   const file = new File(artworkDir(), `${Date.now()}.png`);
   file.create({ overwrite: true });
-  file.write(bytes);
+  file.writeSync(bytes);
   return file.uri;
 }
 
