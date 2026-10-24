@@ -4,13 +4,37 @@ export type Point = { x: number; y: number };
 
 export type BrushKind = 'pencil' | 'brush' | 'eraser';
 
+/** Special looks for a stroke; undefined = plain colour. */
+export type BrushEffect =
+  | 'rainbow'
+  | 'sparkle'
+  | 'glow'
+  | 'crayon'
+  | 'dots'
+  | 'hearts'
+  | 'spray'
+  | 'outline'
+  | 'stars'
+  | 'bubbles'
+  | 'flowers'
+  | 'lights'
+  | 'grass'
+  | 'glitter'
+  | 'watercolor'
+  | 'gradient'
+  | 'neon'
+  | 'calligraphy';
+
 export type Stroke = {
   points: Point[];
   color: string;
   /** rendered stroke width in points (fixed for the life of the stroke) */
   size: number;
-  /** eraser strokes paint white to reveal the background */
+  /** eraser strokes cut through the paint to reveal the background */
   erase?: boolean;
+  /** 0..1, undefined = fully opaque */
+  opacity?: number;
+  effect?: BrushEffect;
   /**
    * Point count. While a stroke is being drawn its `points` array is mutated in
    * place (no per-move copy), so this bumps to signal "the path changed".

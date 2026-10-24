@@ -34,3 +34,25 @@ export const FONT = {
   // System font; keep it simple and legible.
   title: undefined as string | undefined,
 };
+
+// Paper colours for the free-draw canvas – soft pastels plus a few dark ones
+// that make glow / sparkle strokes pop.
+export const BACKGROUNDS: string[] = [
+  '#FFFFFF',
+  '#FFF8E1', // cream
+  '#FFE0B2', // peach
+  '#FCE4EC', // pink
+  '#F3E5F5', // lavender
+  '#E3F2FD', // light blue
+  '#E8F5E9', // mint
+  '#FFF59D', // lemon
+  '#B3E5FC', // sky
+  '#C8E6C9', // green
+  '#263238', // slate
+  '#1A237E', // navy
+  '#000000',
+];
+export const DEFAULT_BACKGROUND = '#FFFFFF';
+
+// Stroke opacity steps, solid → see-through.
+export const OPACITY_LEVELS = [1, 0.7, 0.45, 0.2] as const;

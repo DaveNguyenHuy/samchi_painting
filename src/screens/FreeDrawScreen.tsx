@@ -4,11 +4,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RailButton } from '../components/RailButton';
 import { BrushSlider } from '../components/BrushSlider';
 import { VerticalPalette } from '../components/VerticalPalette';
+import { OpacityPicker } from '../components/OpacityPicker';
+import { BackgroundPicker } from '../components/BackgroundPicker';
+import { StylePicker, styleIcon } from '../components/StylePicker';
 import { DrawSurface, type DrawSurfaceHandle } from '../components/DrawSurface';
 import { Toast } from '../components/Toast';
-import { BRUSH_SIZES, COLORS, DEFAULT_BRUSH_INDEX } from '../theme';
-import type { BrushKind } from '../lib/stroke';
-import { clearArt, createDebouncedSaver, loadArt } from '../lib/artStore';
+import { BRUSH_SIZES, COLORS, DEFAULT_BACKGROUND, DEFAULT_BRUSH_INDEX } from '../theme';
+import type { BrushEffect, BrushKind } from '../lib/stroke';
+import { RAINBOW } from '../lib/effects';
+import {
+  clearArt,
+  createDebouncedSaver,
+  loadArt,
+  loadBackground,
+  saveBackground,
+} from '../lib/artStore';
 import { exportToPhotos, saveArtwork } from '../lib/gallery';
 import { playPop, playSaved, sfxStore, useSfxEnabled } from '../lib/sfx';
 
@@ -22,20 +32,27 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
   if (!saverRef.current) saverRef.current = createDebouncedSaver();
   const saver = saverRef.current;
   const hydrated = useRef(false);
-  const savedRev = useRef(-1);
+  /** revision + background of the last snapshot saved to the gallery */
+  const savedKey = useRef('');
   const savingRef = useRef(false);
 
   const [color, setColor] = useState(DEFAULT_COLOR);
   const [size, setSize] = useState<number>(BRUSH_SIZES[DEFAULT_BRUSH_INDEX]);
   const [tool, setTool] = useState<BrushKind>('brush');
+  const [opacity, setOpacity] = useState(1);
+  const [effect, setEffect] = useState<BrushEffect | undefined>();
+  const [background, setBackground] = useState(DEFAULT_BACKGROUND);
+  const [bgOpen, setBgOpen] = useState(false);
+  const [styleOpen, setStyleOpen] = useState(false);
   const [history, setHistory] = useState({ canUndo: false, canRedo: false });
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    loadArt(STORE_KEY).then((saved) => {
+    Promise.all([loadArt(STORE_KEY), loadBackground(STORE_KEY)]).then(([saved, bg]) => {
       if (cancelled) return;
       if (saved?.length) surface.current?.loadStrokes(saved.map((s) => ({ ...s })));
+      if (bg) setBackground(bg);
       hydrated.current = true;
     });
     return () => {
@@ -65,7 +82,8 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
           surface.current?.clear();
           saver.cancel();
           clearArt(STORE_KEY);
-          savedRev.current = -1;
+          pickBackground(DEFAULT_BACKGROUND);
+          savedKey.current = '';
         },
       },
     ]);
@@ -77,8 +95,8 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
       setToast('Vẽ gì đó trước nhé ✏️');
       return;
     }
-    const rev = surface.current?.revision() ?? 0;
-    if (rev === savedRev.current) {
+    const key = `${surface.current?.revision() ?? 0}:${background}`;
+    if (key === savedKey.current) {
       setToast('Đã lưu rồi 👍');
       return;
     }
@@ -90,7 +108,7 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
         return;
       }
       const uri = saveArtwork(image);
-      savedRev.current = rev;
+      savedKey.current = key;
       playSaved();
       const inPhotos = await exportToPhotos(uri).catch(() => false);
       setToast(inPhotos ? 'Đã lưu vào Ảnh 🎉' : 'Đã lưu vào thư viện 🎉');
@@ -103,6 +121,26 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
     setTool(t);
     playPop();
   };
+
+  const pickStyle = (e: BrushEffect | undefined) => {
+    setEffect(e);
+    if (tool === 'eraser') setTool('brush');
+    playPop();
+  };
+
+  const pickOpacity = (o: number) => {
+    setOpacity(o);
+    if (tool === 'eraser') setTool('brush');
+  };
+
+  function pickBackground(c: string) {
+    setBackground(c);
+    saveBackground(STORE_KEY, c === DEFAULT_BACKGROUND ? null : c);
+  }
+
+  const erasing = tool === 'eraser';
+  const activeEffect = erasing ? undefined : effect;
+  const previewColor = erasing ? '#999' : activeEffect === 'rainbow' ? RAINBOW[6] : color;
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom', 'left', 'right']}>
@@ -118,7 +156,8 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
           <RailButton icon="brush" active={tool === 'brush'} onPress={() => pickTool('brush')} />
           <RailButton icon="eraser" active={tool === 'eraser'} onPress={() => pickTool('eraser')} />
         </View>
-        <BrushSlider size={size} onPick={setSize} color={tool === 'eraser' ? '#999' : color} />
+        <BrushSlider size={size} onPick={setSize} color={previewColor} />
+        <OpacityPicker opacity={erasing ? 1 : opacity} onPick={pickOpacity} color={previewColor} />
       </ScrollView>
 
       <View style={styles.center}>
@@ -127,6 +166,10 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
             <RailButton icon="undo-variant" onPress={() => surface.current?.undo()} disabled={!history.canUndo} />
             <RailButton icon="redo-variant" onPress={() => surface.current?.redo()} disabled={!history.canRedo} />
             <RailButton icon="trash-can-outline" onPress={clearAll} disabled={!history.canUndo} />
+          </View>
+          <View style={styles.topGroup}>
+            <RailButton icon={styleIcon(activeEffect)} active={!!activeEffect} onPress={() => setStyleOpen(true)} />
+            <RailButton icon="format-color-fill" onPress={() => setBgOpen(true)} />
           </View>
           <View style={styles.topGroup}>
             <RailButton icon={soundOn ? 'volume-high' : 'volume-off'} onPress={sfxStore.toggle} />
@@ -140,6 +183,9 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
             color={color}
             size={size}
             tool={tool}
+            opacity={opacity}
+            effect={effect}
+            background={background}
             onChange={onChange}
             onHistoryChange={onHistoryChange}
           />
@@ -152,10 +198,26 @@ export function FreeDrawScreen({ onBack }: { onBack: () => void }) {
           onPick={(c) => {
             setColor(c);
             if (tool === 'eraser') setTool('brush');
+            if (effect === 'rainbow') setEffect(undefined); // rainbow ignores the colour
           }}
         />
       </View>
 
+      <StylePicker
+        visible={styleOpen}
+        effect={activeEffect}
+        color={color}
+        opacity={opacity}
+        background={background}
+        onPick={pickStyle}
+        onClose={() => setStyleOpen(false)}
+      />
+      <BackgroundPicker
+        visible={bgOpen}
+        color={background}
+        onPick={pickBackground}
+        onClose={() => setBgOpen(false)}
+      />
       <Toast message={toast} onDone={() => setToast(null)} />
     </SafeAreaView>
   );
@@ -180,7 +242,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 3,
     borderColor: COLORS.border,
-    backgroundColor: '#FFFFFF',
   },
   paletteRail: { width: 84, paddingRight: 8, paddingVertical: 10 },
 });

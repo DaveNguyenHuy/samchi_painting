@@ -1,5 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
-import { computeWidth, far, type BrushKind, type Point, type Stroke } from '../lib/stroke';
+import {
+  computeWidth,
+  far,
+  type BrushEffect,
+  type BrushKind,
+  type Point,
+  type Stroke,
+} from '../lib/stroke';
 
 /** Minimum spacing between recorded points, in screen units. */
 const MIN_POINT_DIST = 2.2;
@@ -13,6 +20,10 @@ type BeginArgs = {
   color: string;
   baseSize: number;
   pressure?: number | null;
+  /** 0..1 – ignored by the eraser */
+  opacity?: number;
+  /** ignored by the eraser */
+  effect?: BrushEffect;
 };
 
 /**
@@ -42,13 +53,18 @@ export function useDrawing() {
     const cfg = cfgRef.current!;
     draftRef.current = [at];
     lastRef.current = at;
+    const erase = cfg.tool === 'eraser';
     const stroke: Stroke = {
       points: draftRef.current,
       color: cfg.color,
       size: computeWidth(cfg.tool, cfg.baseSize, cfg.pressure),
-      erase: cfg.tool === 'eraser',
+      erase,
       n: 1,
     };
+    if (!erase) {
+      if (cfg.opacity != null && cfg.opacity < 1) stroke.opacity = cfg.opacity;
+      if (cfg.effect) stroke.effect = cfg.effect;
+    }
     curRef.current = stroke;
     setCurrent(stroke);
   }, []);

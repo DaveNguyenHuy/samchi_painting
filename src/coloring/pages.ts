@@ -13,6 +13,7 @@ import {
   roundRect,
   star,
 } from './shapes';
+import { MORE_PAGES } from './morePages';
 
 /**
  * fill – a blank area the child taps to colour.
@@ -2424,4 +2425,5 @@ export const PAGES: ColoringPage[] = [
   { id: 'dreamcatcher', title: 'Bắt mộng', emoji: '🪶', build: dreamcatcher },
   { id: 'dollhouse', title: 'Nhà búp bê', emoji: '🏡', build: dollhouse },
   { id: 'aquarium', title: 'Bể cá cảnh', emoji: '🐡', build: aquarium },
+  ...MORE_PAGES,
 ];

@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { COLORS } from '../src/theme';
@@ -24,12 +23,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar hidden />
         <Stack
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: COLORS.bg },
             animation: 'fade',
+            // iOS 27 ignores the app-wide status bar API – hide it per screen instead
+            statusBarHidden: true,
           }}
         />
       </SafeAreaProvider>

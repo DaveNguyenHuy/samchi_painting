@@ -16,7 +16,9 @@
       "bundleIdentifier": "com.davenguyenhuy.vecungchisam",
       "infoPlist": {
         "UIBackgroundModes": [],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIStatusBarHidden": true,
+        "UIViewControllerBasedStatusBarAppearance": true
       },
       "appleTeamId": "N8VELFT88F"
     },

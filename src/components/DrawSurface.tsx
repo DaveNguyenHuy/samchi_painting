@@ -10,37 +10,14 @@ import {
   Canvas,
   Fill,
   Group,
-  Path,
-  Skia,
   type SkImage,
   type SkRect,
   useCanvasRef,
 } from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useDrawing } from '../hooks/useDrawing';
-import { buildPath, type BrushKind, type Stroke } from '../lib/stroke';
-
-/** Memoised – a committed stroke's object identity never changes, so it renders once. */
-const StrokePath = React.memo(function StrokePath({ stroke }: { stroke: Stroke }) {
-  const dot = stroke.points.length < 2;
-  const path = useMemo(
-    () =>
-      dot
-        ? Skia.Path.Circle(stroke.points[0].x, stroke.points[0].y, stroke.size / 2)
-        : buildPath(stroke.points),
-    [stroke.points, stroke.n, dot, stroke.size],
-  );
-  return (
-    <Path
-      path={path}
-      color={stroke.erase ? '#FFFFFF' : stroke.color}
-      style={dot ? 'fill' : 'stroke'}
-      strokeWidth={stroke.size}
-      strokeCap="round"
-      strokeJoin="round"
-    />
-  );
-});
+import type { BrushEffect, BrushKind, Stroke } from '../lib/stroke';
+import { StrokePath } from './StrokeView';
 
 /** Only re-renders when the committed strokes array changes (not on every move). */
 const CommittedLayer = React.memo(function CommittedLayer({
@@ -73,6 +50,11 @@ type Props = {
   color: string;
   size: number;
   tool: BrushKind;
+  /** 0..1, default 1 */
+  opacity?: number;
+  effect?: BrushEffect;
+  /** canvas colour under the paint – the eraser reveals it. Default white. */
+  background?: string;
   /** Skia nodes painted on top of the strokes (e.g. colouring line art). */
   overlay?: React.ReactNode;
   /** Clip painted strokes to this rect. */
@@ -82,7 +64,18 @@ type Props = {
 };
 
 export const DrawSurface = forwardRef<DrawSurfaceHandle, Props>(function DrawSurface(
-  { color, size, tool, overlay, clip, onHistoryChange, onChange },
+  {
+    color,
+    size,
+    tool,
+    opacity = 1,
+    effect,
+    background = '#FFFFFF',
+    overlay,
+    clip,
+    onHistoryChange,
+    onChange,
+  },
   ref,
 ) {
   const canvasRef = useCanvasRef();
@@ -91,8 +84,8 @@ export const DrawSurface = forwardRef<DrawSurfaceHandle, Props>(function DrawSur
 
   // Gesture + imperative handle read live values through refs so they are
   // created once and never rebuilt / reallocated on a pointer move.
-  const cfg = useRef({ color, size, tool });
-  cfg.current = { color, size, tool };
+  const cfg = useRef({ color, size, tool, opacity, effect });
+  cfg.current = { color, size, tool, opacity, effect };
   const cb = useRef({ onHistoryChange, onChange });
   cb.current = { onHistoryChange, onChange };
   const drawingRef = useRef(drawing);
@@ -144,6 +137,8 @@ export const DrawSurface = forwardRef<DrawSurfaceHandle, Props>(function DrawSur
             tool: cfg.current.tool,
             color: cfg.current.color,
             baseSize: cfg.current.size,
+            opacity: cfg.current.opacity,
+            effect: cfg.current.effect,
             pressure: (e as { stylusData?: { pressure?: number } }).stylusData?.pressure,
           }),
         )
@@ -157,8 +152,9 @@ export const DrawSurface = forwardRef<DrawSurfaceHandle, Props>(function DrawSur
     <GestureDetector gesture={pan}>
       <View style={StyleSheet.absoluteFill}>
         <Canvas style={StyleSheet.absoluteFill} ref={canvasRef}>
-          <Fill color="#FFFFFF" />
-          <Group clip={clip}>
+          <Fill color={background} />
+          {/* own layer so eraser strokes clear paint, not the background */}
+          <Group clip={clip} layer>
             <CommittedLayer strokes={strokes} />
             {current && <StrokePath stroke={current} />}
           </Group>

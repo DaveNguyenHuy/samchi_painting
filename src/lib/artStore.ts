@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Stroke } from './stroke';
 
 /** What we persist – a stroke without its rebuilt SkPath. */
-export type SavedStroke = Pick<Stroke, 'points' | 'color' | 'size' | 'erase'>;
+export type SavedStroke = Pick<Stroke, 'points' | 'color' | 'size' | 'erase' | 'opacity' | 'effect'>;
 
 const storageKey = (key: string) => `art:${key}`;
 
@@ -12,6 +12,8 @@ function slim(strokes: SavedStroke[]): SavedStroke[] {
     color: s.color,
     size: Math.round(s.size),
     erase: s.erase,
+    opacity: s.opacity,
+    effect: s.effect,
   }));
 }
 
@@ -32,6 +34,22 @@ export function saveArt(key: string, strokes: SavedStroke[]): void {
 
 export function clearArt(key: string): void {
   AsyncStorage.removeItem(storageKey(key)).catch(() => {});
+}
+
+const bgKey = (key: string) => storageKey(`${key}:bg`);
+
+/** Canvas background colour for a drawing, or null for the default (white). */
+export async function loadBackground(key: string): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(bgKey(key));
+  } catch {
+    return null;
+  }
+}
+
+export function saveBackground(key: string, color: string | null): void {
+  const op = color ? AsyncStorage.setItem(bgKey(key), color) : AsyncStorage.removeItem(bgKey(key));
+  op.catch(() => {});
 }
 
 const LAST_PAGE_KEY = storageKey('coloring-last-page');
